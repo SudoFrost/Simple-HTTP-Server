@@ -22,6 +22,6 @@ func main() {
 
 	fmt.Println("Client connected")
 
-	conn.Write([]byte("Hello World"))
+	conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\nHello, world!"))
 	conn.Close()
 }
