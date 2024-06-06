@@ -14,13 +14,15 @@ func main() {
 
 	fmt.Println("Server started on port 8080")
 
-	conn, err := listener.Accept()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Client connected")
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Client connected")
 
-	handleConnection(conn)
+		go handleConnection(conn)
+	}
 }
 
 func handleConnection(conn net.Conn) {
