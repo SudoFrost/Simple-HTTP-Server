@@ -18,10 +18,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close()
-
 	fmt.Println("Client connected")
 
+	handleConnection(conn)
+}
+
+func handleConnection(conn net.Conn) {
+	defer conn.Close()
 	conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\nHello, world!"))
-	conn.Close()
 }
