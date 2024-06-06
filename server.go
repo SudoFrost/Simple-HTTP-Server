@@ -24,6 +24,9 @@ func main() {
 }
 
 func handleConnection(conn net.Conn) {
-	defer conn.Close()
+	defer func() {
+		conn.Close()
+		fmt.Println("Client closed")
+	}()
 	conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\nHello, world!"))
 }
