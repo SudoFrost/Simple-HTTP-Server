@@ -30,5 +30,16 @@ func handleConnection(conn net.Conn) {
 		conn.Close()
 		fmt.Println("Client closed")
 	}()
+
+	req := CreateRequest(conn)
+
+	fmt.Printf("[New Request] => [Method: %s, Path: %s]\n", req.Method, req.Path)
+	fmt.Println("Headers:")
+	for key, values := range req.Header {
+		for _, value := range values {
+			fmt.Printf("  %s: %s\n", key, value)
+		}
+	}
+
 	conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\nHello, world!"))
 }
