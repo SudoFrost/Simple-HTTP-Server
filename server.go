@@ -32,6 +32,7 @@ func handleConnection(conn net.Conn) {
 	}()
 
 	req := CreateRequest(conn)
+	res := NewResponse()
 
 	fmt.Printf("[New Request] => [Method: %s, Path: %s]\n", req.Method, req.Path)
 	fmt.Println("Headers:")
@@ -40,6 +41,9 @@ func handleConnection(conn net.Conn) {
 			fmt.Printf("  %s: %s\n", key, value)
 		}
 	}
+	res.SetStatus("OK", 200)
+	res.Header.Set("Content-Type", "text/plain")
+	res.WriteString("Hello, world!")
 
-	conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\nHello, world!"))
+	WriteResponse(conn, res)
 }
