@@ -1,49 +1,61 @@
 package main
 
 import (
-	"fmt"
 	"net"
 )
 
-func main() {
-	listener, err := net.Listen("tcp", ":8080")
+type Server struct {
+	listener    net.Listener
+	handler     func(req *Request, res *Response)
+	connections []net.Conn
+}
+
+func NewServer(addr string, handler func(req *Request, res *Response)) *Server {
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		panic(err)
 	}
-	defer listener.Close()
 
-	fmt.Println("Server started on port 8080")
+	server := Server{
+		listener:    listener,
+		handler:     handler,
+		connections: []net.Conn{},
+	}
 
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			panic(err)
+	return &server
+}
+
+func (s *Server) CloseConnection(c *net.Conn) {
+	conn := *c
+	conn.Close()
+	tmp := s.connections
+	s.connections = []net.Conn{}
+	for i := 0; i < len(tmp); i++ {
+		if tmp[i] == conn {
+			continue
 		}
-		fmt.Println("Client connected")
-
-		go handleConnection(conn)
+		s.connections = append(s.connections, tmp[i])
 	}
 }
 
-func handleConnection(conn net.Conn) {
-	defer func() {
-		conn.Close()
-		fmt.Println("Client closed")
-	}()
-
+func (s *Server) handleConnection(conn net.Conn) {
+	defer s.CloseConnection(&conn)
 	req := CreateRequest(conn)
 	res := NewResponse()
 
-	fmt.Printf("[New Request] => [Method: %s, Path: %s]\n", req.Method, req.Path)
-	fmt.Println("Headers:")
-	for key, values := range req.Header {
-		for _, value := range values {
-			fmt.Printf("  %s: %s\n", key, value)
-		}
-	}
-	res.SetStatus("OK", 200)
-	res.Header.Set("Content-Type", "text/plain")
-	res.WriteString("Hello, world!")
+	s.handler(req, res)
 
 	WriteResponse(conn, res)
+
+}
+
+func (s *Server) AcceptLoop() {
+	for {
+		conn, err := s.listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+		s.connections = append(s.connections, conn)
+		go s.handleConnection(conn)
+	}
 }
